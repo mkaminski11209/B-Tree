@@ -1,38 +1,6 @@
 <?php
 
-class Node
-{
-    /**
-     * @var Entry[]
-     */
-    public $keys = array();
-
-    /**
-     * @var Node[]
-     */
-    public $children;
-
-    public $leaf = true;
-}
-
-class Entry
-{
-    public function __construct($key, $value)
-    {
-        $this->key = $key;
-        $this->value = $value;
-    }
-
-    /**
-     * @var string
-     */
-    public $key;
-
-    /**
-     * @var string
-     */
-    public $value;
-}
+namespace Kaminski\BTree;
 
 class BTree
 {

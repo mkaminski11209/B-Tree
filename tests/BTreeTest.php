@@ -1,6 +1,8 @@
 <?php
 
-require_once 'BTree.php';
+require_once __DIR__.'/../vendor/autoload.php';
+
+use Kaminski\BTree\BTree;
 
 class BTreeTest extends PHPUnit_Framework_TestCase
 {
