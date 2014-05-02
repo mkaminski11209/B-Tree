@@ -60,12 +60,18 @@ class BTree
      */
     private function search(Node $node, $key)
     {
-        for ($i = 0; $i <= count($node->keys); $i++) {
-            if ($i === count($node->keys) || $key < $node->keys[$i]->key) {
+        $key_count = count($node->keys);
+
+        for ($i = 0; $i <= $key_count; $i++) {
+
+            if ($i === $key_count || $key < $node->keys[$i]->key) {
+
                 $result = $this->search($node->children[$i], $key);
+
                 if ($result !== null) {
                     return $result;
                 }
+
             } else if ($key === $node->keys[$i]->key) {
                 return $node->keys[$i];
             }
@@ -97,41 +103,37 @@ class BTree
     private function insert(Node $node, $key, $value)
     {
         if (count($node->children) === 0) {
+
             $count = count($node->keys);
+
             for ($i = 0; $i < $count; $i++) {
                 if ($key < $node->keys[$i]->key) {
                     break;
                 }
             }
 
-            $count = count($node->keys);
-            //Shift the keys over to make room
-            for ($j = $count; $j > $i; $j--) {
-                $node->keys[$j] = $node->keys[$j - 1];
-            }
-
-            $node->keys[$i] = new Entry($key, $value);
+            $this->insertAt($node->keys, $i, new Entry($key, $value));
 
         } else {
-            for ($i = 0; $i < count($node->keys); $i++) {
+
+            $key_count = count($node->keys);
+
+            for ($i = 0; $i < $key_count; $i++) {
+
                 if ($key < $node->keys[$i]->key) {
 
                     $result = $this->insert($node->children[$i], $key, $value);
 
                     if ($result !== null) {
-
-                        for ($j = count($node->children); $j > ($i + 1); $j--) {
-                            $node->children[$j] = $node->children[$j - 1];
-                        }
-
-                        $node->children[$j] = $result;
-
+                        $this->insertAt($node->children, $i + 1, $result);
                         $node->keys = array_merge($node->keys, array_splice($node->children[$i]->keys, 1, 1));
                         sort($node->keys);
                     }
+
                     break;
                 }
             }
+
             if ($i === count($node->keys)) {
                 $result = $this->insert($node->children[$i], $key, $value);
                 if ($result !== null) {
@@ -146,6 +148,20 @@ class BTree
         }
 
         return null;
+    }
+
+    /**
+     * @param array $array
+     * @param $index
+     * @param $value
+     */
+    private function insertAt(array &$array, $index, $value)
+    {
+        $array_size = count($array);
+        for ($j = $array_size; $j > $index; $j--) {
+            $array[$j] = $array[$j - 1];
+        }
+        $array[$j] = $value;
     }
 
 }
