@@ -13,6 +13,4 @@ class Node
      * @var Node[]
      */
     public $children;
-
-    public $leaf = true;
 }

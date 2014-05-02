@@ -4,34 +4,53 @@ namespace Kaminski\BTree;
 
 class BTree
 {
+    const DEFAULT_ORDER = 3;
 
-    private $root;
+    /**
+     * @var Node
+     */
+    private $rootNode;
 
-    const MAX_CHILDREN = 3;
+    /**
+     * The number of child nodes
+     * @var int
+     */
+    private $order;
 
-    public function __construct()
+    /**
+     * @param int $order
+     */
+    public function __construct($order = self::DEFAULT_ORDER)
     {
-        $this->root = new Node();
+        $this->order = $order;
+        $this->rootNode = new Node();
     }
 
+    /**
+     * @param $key
+     * @param $value
+     */
     public function put($key, $value)
     {
-        $result = $this->insert($this->root, $key, $value);
+        $result = $this->insert($this->rootNode, $key, $value);
 
         if ($result !== null) {
             //Split root
             $n = new Node();
-            $n->children[] = $this->root;
+            $n->children[] = $this->rootNode;
             $n->children[] = $result;
-            $n->keys = array_splice($this->root->keys, 1, 1);
-            $this->root = $n;
-            $this->root->leaf = false;
+            $n->keys = array_splice($this->rootNode->keys, 1, 1);
+            $this->rootNode = $n;
         }
     }
 
+    /**
+     * @param $key
+     * @return Entry|null
+     */
     public function find($key)
     {
-        return $this->search($this->root, $key);
+        return $this->search($this->rootNode, $key);
     }
 
     /**
@@ -122,7 +141,7 @@ class BTree
             }
         }
 
-        if (count($node->keys) === self::MAX_CHILDREN) {
+        if (count($node->keys) === $this->order) {
             return $this->split($node);
         }
 
