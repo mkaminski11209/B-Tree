@@ -74,7 +74,7 @@ class BTree
 
             if ($i === $key_count || $key < $node->keys[$i]->key) {
 
-                $result = $this->search($node->children[$i], $key);
+                $result = $this->search($this->store->getChildNode($node, $i), $key);
 
                 if ($result !== null) {
                     return $result;
@@ -97,6 +97,7 @@ class BTree
     {
         $new_root = new Node();
         $new_root->keys = array_splice($node->keys, 2);
+        //TODO... write out notes after splicing them?
         $new_root->children = count($node->children) > 2 ? array_splice($node->children, 2) : array();
 
         return $new_root;
@@ -134,6 +135,7 @@ class BTree
 
                     if ($result !== null) {
                         $this->store->writeChildNode($node, $i + 1, $result);
+                        //TODO... write out notes after splicing them?
                         $node->keys = array_merge($node->keys, array_splice($node->children[$i]->keys, 1, 1));
                         sort($node->keys);
                     }
@@ -145,7 +147,8 @@ class BTree
             if ($i === count($node->keys)) {
                 $result = $this->insert($node->children[$i], $key, $value);
                 if ($result !== null) {
-                    $node->children[] = $result;
+                    $this->store->writeChildNode($node, $i + 1, $result);
+                    //TODO... write out notes after splicing them?
                     $node->keys = array_merge($node->keys, array_splice($node->children[$i]->keys, 1, 1));
                 }
             }
