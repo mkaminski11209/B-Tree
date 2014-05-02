@@ -18,12 +18,19 @@ class BTree
     private $order;
 
     /**
+     * @var StoreInterface
+     */
+    private $store;
+
+    /**
+     * @param StoreInterface $store
      * @param int $order
      */
-    public function __construct($order = self::DEFAULT_ORDER)
+    public function __construct(StoreInterface $store, $order = self::DEFAULT_ORDER)
     {
         $this->order = $order;
-        $this->rootNode = new Node();
+        $this->store = $store;
+        $this->rootNode = $this->store->getRootNode();
     }
 
     /**
@@ -37,10 +44,11 @@ class BTree
         if ($result !== null) {
             //Split root
             $n = new Node();
-            $n->children[] = $this->rootNode;
-            $n->children[] = $result;
             $n->keys = array_splice($this->rootNode->keys, 1, 1);
-            $this->rootNode = $n;
+            $this->store->writeChildNode($n, 0, $this->rootNode);
+            $this->store->writeChildNode($n, 1, $result);
+            $this->store->writeRootNode($n);
+            $this->rootNode = $this->store->getRootNode();
         }
     }
 
@@ -122,10 +130,10 @@ class BTree
 
                 if ($key < $node->keys[$i]->key) {
 
-                    $result = $this->insert($node->children[$i], $key, $value);
+                    $result = $this->insert($this->store->getChildNode($node, $i), $key, $value);
 
                     if ($result !== null) {
-                        $this->insertAt($node->children, $i + 1, $result);
+                        $this->store->writeChildNode($node, $i + 1, $result);
                         $node->keys = array_merge($node->keys, array_splice($node->children[$i]->keys, 1, 1));
                         sort($node->keys);
                     }
