@@ -39,15 +39,25 @@ class BTree
      */
     public function put($key, $value)
     {
-        $result = $this->insert($this->rootNode, $key, $value);
+        $left = $this->rootNode;
 
-        if ($result !== null) {
+        $right = $this->insert($left, $key, $value);
+
+        if ($right !== null) {
+
+            $this->store->allocateNode($right);
+            $third = new Node();
+            $this->store->allocateNode($third);
+
             //Split root
             $n = new Node();
-            $n->keys = array_splice($this->rootNode->keys, 1, 1);
-            $this->store->writeChildNode($n, 0, $this->rootNode);
-            $this->store->writeChildNode($n, 1, $result);
+            $n->keys = array_splice($left->keys, 1, 1);
             $this->store->writeRootNode($n);
+
+            $this->store->writeChildNode($n, 0, $left);
+            $this->store->writeChildNode($n, 1, $right);
+            $this->store->writeChildNode($n, 2, $third);
+
             $this->rootNode = $this->store->getRootNode();
         }
     }
@@ -134,6 +144,7 @@ class BTree
                     $result = $this->insert($this->store->getChildNode($node, $i), $key, $value);
 
                     if ($result !== null) {
+                        $this->store->allocateNode($result);
                         $this->store->writeChildNode($node, $i + 1, $result);
                         //TODO... write out notes after splicing them?
                         $node->keys = array_merge($node->keys, array_splice($node->children[$i]->keys, 1, 1));
@@ -145,17 +156,22 @@ class BTree
             }
 
             if ($i === count($node->keys)) {
-                $result = $this->insert($node->children[$i], $key, $value);
+                $child = $this->store->getChildNode($node, $i);
+                $result = $this->insert($child, $key, $value);
                 if ($result !== null) {
+                    $this->store->allocateNode($result);
                     $this->store->writeChildNode($node, $i + 1, $result);
                     //TODO... write out notes after splicing them?
-                    $node->keys = array_merge($node->keys, array_splice($node->children[$i]->keys, 1, 1));
+                    $node->keys = array_merge($node->keys, array_splice($child->keys, 1, 1));
+                    $this->store->writeNode($child);
                 }
             }
         }
 
         if (count($node->keys) === $this->order) {
             return $this->split($node);
+        } else {
+            $this->store->writeNode($node);
         }
 
         return null;

@@ -13,4 +13,9 @@ class Node
      * @var Node[]
      */
     public $children;
+
+    /**
+     * @var int
+     */
+    public $offset;
 }
