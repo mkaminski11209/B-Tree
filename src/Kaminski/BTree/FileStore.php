@@ -96,9 +96,11 @@ class FileStore implements StoreInterface
 
     public function allocateNode(Node $node)
     {
-        fseek($this->fileHandler, 0, SEEK_END);
+        fseek($this->fileHandler, -self::NODE_SIZE_BYTES, SEEK_END);
         $node->offset = ftell($this->fileHandler);
         fwrite($this->fileHandler, $this->serialize($node), self::NODE_SIZE_BYTES);
+
+        $this->writeRootNode($this->getRootNode());
     }
 
     public function writeNode(Node $node)

@@ -141,14 +141,16 @@ class BTree
 
                 if ($key < $node->keys[$i]->key) {
 
-                    $result = $this->insert($this->store->getChildNode($node, $i), $key, $value);
+                    $child = $this->store->getChildNode($node, $i);
+
+                    $result = $this->insert($child, $key, $value);
 
                     if ($result !== null) {
                         $this->store->allocateNode($result);
-                        $this->store->writeChildNode($node, $i + 1, $result);
-                        //TODO... write out notes after splicing them?
-                        $node->keys = array_merge($node->keys, array_splice($node->children[$i]->keys, 1, 1));
+                        $this->insertAt($node->children, $i + 1, $result->offset);
+                        $node->keys = array_merge($node->keys, array_splice($child->keys, 1, 1));
                         sort($node->keys);
+                        $this->store->writeNode($child);
                     }
 
                     break;
