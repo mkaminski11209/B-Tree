@@ -5,7 +5,15 @@ require_once 'vendor/autoload.php';
 
 use \Kaminski\BTree\FileStore;
 
-$store = new FileStore('/tmp/db.txt', 3);
+$file = '/tmp/db.txt';
+
+if(file_exists($file)) {
+    unlink($file);
+}
+
+touch($file);
+
+$store = new FileStore($file, 3);
 //$store = new \Kaminski\BTree\ArrayStore();
 $tree = new \Kaminski\BTree\BTree($store);
 
@@ -15,16 +23,19 @@ $count = 1000;
 for($i = 1; $i <= $count; $i++) {
     $tree->put($i, "val_!".$i);
 }
+//
+//$store = new FileStore('/tmp/db.txt', 3);
+////$store = new \Kaminski\BTree\ArrayStore();
+//$tree = new \Kaminski\BTree\BTree($store);
 
-$store = new FileStore('/tmp/db.txt', 3);
-//$store = new \Kaminski\BTree\ArrayStore();
-$tree = new \Kaminski\BTree\BTree($store);
+$store->resetSeekCount();
 
 print_r($tree->getKeyRange(70, 91));
 
-for($i = 1; $i <= $count; $i++) {
-    echo "\n".$tree->find($i)->value."\n";
-}
+echo 'Seeks: '.$store->getSeekCount();
+//for($i = 1; $i <= $count; $i++) {
+//    echo "\n".$tree->find($i)->value."\n";
+//}
 //die(print_r($store->getRootNode()));
 //
 //$store = new FileStore('/tmp/db.txt', 3, false);

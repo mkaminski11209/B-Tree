@@ -12,9 +12,22 @@ class BTreeTestFileStore extends PHPUnit_Framework_TestCase
      */
     private $tree;
 
+    /**
+     * @var FileStore
+     */
+    private $store;
+
+    const FILE_STORE = '/tmp/db.txt';
+
     public function setUp() {
-        $store = new \Kaminski\BTree\FileStore('/tmp/db.txt', 3, true);
-        $this->tree = new BTree($store);
+        touch(self::FILE_STORE);
+        $this->store = new \Kaminski\BTree\FileStore(self::FILE_STORE, 3);
+        $this->tree = new BTree($this->store);
+    }
+
+    public function tearDown() {
+        unset($this->store);
+        unlink(self::FILE_STORE);
     }
 
     public function testAddAscending()

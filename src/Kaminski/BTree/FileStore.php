@@ -38,6 +38,11 @@ class FileStore implements StoreInterface
     private $maxKeys;
 
     /**
+     * @var int
+     */
+    private $seekCount;
+
+    /**
      * @param string $file_name Full path to database file
      * @param int $max_keys The order of the B-Tree
      */
@@ -73,7 +78,7 @@ class FileStore implements StoreInterface
     public function getChildNode(Node $node, $index)
     {
         $child_offset = $node->children[$index];
-        fseek($this->fileHandler, $child_offset);
+        $this->fseek($this->fileHandler, $child_offset);
         $contents = fread($this->fileHandler, self::NODE_SIZE_BYTES);
         $contents = unserialize($contents);
         if (!$contents instanceof Node) {
@@ -93,7 +98,7 @@ class FileStore implements StoreInterface
         $child_offset = $child_node->offset;
 
         $child_node->offset = $child_offset;
-        fseek($this->fileHandler, $child_offset);
+        $this->fseek($this->fileHandler, $child_offset);
         fwrite($this->fileHandler, $this->serialize($child_node), self::NODE_SIZE_BYTES);
         $parent_node->children[$index] = $child_offset;
         $this->writeNode($child_node);
@@ -106,7 +111,7 @@ class FileStore implements StoreInterface
      */
     public function allocateNode(Node $node)
     {
-        fseek($this->fileHandler, -self::NODE_SIZE_BYTES, SEEK_END);
+        $this->fseek($this->fileHandler, -self::NODE_SIZE_BYTES, SEEK_END);
         $node->offset = ftell($this->fileHandler);
         fwrite($this->fileHandler, $this->serialize($node), self::NODE_SIZE_BYTES);
 
@@ -121,7 +126,7 @@ class FileStore implements StoreInterface
     public function writeNode(Node $node)
     {
         if (is_int($node->offset)) {
-            fseek($this->fileHandler, $node->offset);
+            $this->fseek($this->fileHandler, $node->offset);
             fwrite($this->fileHandler, $this->serialize($node), self::NODE_SIZE_BYTES);
         } else {
             throw new RuntimeException('Requires offset');
@@ -134,7 +139,7 @@ class FileStore implements StoreInterface
      */
     public function writeRootNode(Node $node)
     {
-        fseek($this->fileHandler, 0, SEEK_END);
+        $this->fseek($this->fileHandler, 0, SEEK_END);
         fwrite($this->fileHandler, $this->serialize($node), self::NODE_SIZE_BYTES);
 
         $node->offset = ftell($this->fileHandler) - self::NODE_SIZE_BYTES;
@@ -178,6 +183,31 @@ class FileStore implements StoreInterface
     }
 
     /**
+     * @return int
+     */
+    public function getSeekCount() {
+        return $this->seekCount;
+    }
+
+    /**
+     * @return void
+     */
+    public function resetSeekCount() {
+        $this->seekCount = 0;
+    }
+
+    /**
+     * @param $resource
+     * @param $offset
+     * @param int $whence
+     * @return int
+     */
+    private function fseek($resource, $offset, $whence = SEEK_SET) {
+        $this->seekCount++;
+        return fseek($resource, $offset, $whence);
+    }
+
+    /**
      * @param $object
      * @return string
      */
@@ -196,7 +226,7 @@ class FileStore implements StoreInterface
         // Open for reading and writing; place the file pointer at the end of
         // the file. If the file does not exist, attempt to create it.
         //
-        if (!($this->fileHandler = fopen($this->fileName, 'a+'))) {
+        if (!($this->fileHandler = fopen($this->fileName, 'r+'))) {
             throw new RuntimeException('Unable to open file '.$this->fileName);
         }
     }
@@ -206,7 +236,7 @@ class FileStore implements StoreInterface
      */
     private function setRootNode()
     {
-        if (fseek($this->fileHandler, -self::NODE_SIZE_BYTES, SEEK_END) !== -1) {
+        if ($this->fseek($this->fileHandler, -self::NODE_SIZE_BYTES, SEEK_END) !== -1) {
             $contents = fread($this->fileHandler, self::NODE_SIZE_BYTES);
             $this->rootNode = unserialize($contents);
         } else {
