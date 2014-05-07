@@ -7,8 +7,7 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 if (count($argv) != 4) {
-    echo "\nMissing arguments. Format: php " . __FILE__ . " [file] [lowkey] [hikey]\n\n";
-    exit;
+    die("\nMissing arguments. Format: php " . __FILE__ . " [file] [lowkey] [hikey]\n\n");
 }
 
 $filename = $argv[1];
@@ -31,8 +30,7 @@ try {
     }
 
 } catch (\Exception $e) {
-    echo "Error occurred: " . $e->getMessage();
-    exit;
+    die("Error occurred: " . $e->getMessage());
 }
 
 echo "\n\n";
