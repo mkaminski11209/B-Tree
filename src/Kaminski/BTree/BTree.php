@@ -24,11 +24,10 @@ class BTree
 
     /**
      * @param StoreInterface $store
-     * @param int $order
      */
-    public function __construct(StoreInterface $store, $order = self::DEFAULT_ORDER)
+    public function __construct(StoreInterface $store)
     {
-        $this->order = $order;
+        $this->order = $store->getMaxKeys();
         $this->store = $store;
         $this->rootNode = $this->store->getRootNode();
     }
@@ -193,7 +192,8 @@ class BTree
         $array[$j] = $value;
     }
 
-    public function getKeyRange($from, $to) {
+    public function getKeyRange($from, $to)
+    {
         return $this->store->traverse($this->store->getRootNode(), $from, $to);
     }
 }

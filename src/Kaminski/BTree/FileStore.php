@@ -1,5 +1,12 @@
 <?php
-
+/**
+ * B-Tree File Store
+ *
+ * Supports 4KB 3, 5, 7...-ary nodes
+ *
+ * @author Mike Kaminski <michael.w.kaminski@gmail.com>
+ * @since 5/6/2014
+ */
 namespace Kaminski\BTree;
 
 use \OutOfRangeException;
@@ -26,18 +33,18 @@ class FileStore implements StoreInterface
     private $rootNode;
 
     /**
-     * @var bool
+     * @var int
      */
-    private $overWrite;
+    private $maxKeys;
 
     /**
      * @param string $file_name Full path to database file
-     * @param bool $over_write Clear database file before writing
+     * @param int $max_keys The order of the B-Tree
      */
-    public function __construct($file_name, $over_write = false)
+    public function __construct($file_name, $max_keys)
     {
         $this->fileName = $file_name;
-        $this->overWrite = $over_write;
+        $this->maxKeys = $max_keys;
         $this->setFileHandler();
         $this->setRootNode();
     }
@@ -181,13 +188,16 @@ class FileStore implements StoreInterface
 
 
     /**
-     * @throws \Exception
+     * @throws \RuntimeException
      */
     private function setFileHandler()
     {
-        $mode = $this->overWrite == true ? 'w+' : 'r+';
-        if (!($this->fileHandler = fopen($this->fileName, $mode))) {
-            throw new RuntimeException('Unable to open file');
+        //
+        // Open for reading and writing; place the file pointer at the end of
+        // the file. If the file does not exist, attempt to create it.
+        //
+        if (!($this->fileHandler = fopen($this->fileName, 'a+'))) {
+            throw new RuntimeException('Unable to open file '.$this->fileName);
         }
     }
 
@@ -203,5 +213,13 @@ class FileStore implements StoreInterface
             $this->rootNode = new Node();
             $this->writeRootNode($this->rootNode);
         }
+    }
+
+    /**
+     * @return int
+     */
+    public function getMaxKeys()
+    {
+        return $this->maxKeys;
     }
 }

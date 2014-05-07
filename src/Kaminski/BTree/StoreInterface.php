@@ -50,4 +50,9 @@ interface StoreInterface
      * @return array
      */
     public function traverse(Node $node, $min_key, $max_key);
+
+    /**
+     * @return int
+     */
+    public function getMaxKeys();
 }
