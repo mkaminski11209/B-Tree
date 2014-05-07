@@ -2,61 +2,55 @@
 
 namespace Kaminski\BTree;
 
+use \OutOfRangeException;
+use \RuntimeException;
+
 class FileStore implements StoreInterface
 {
 
     const NODE_SIZE_BYTES = 4096;
 
+    /**
+     * @var string
+     */
     private $fileName;
 
+    /**
+     * @var resource
+     */
     private $fileHandler;
-
-    private $maxChildren;
 
     /**
      * @var Node
      */
     private $rootNode;
 
-    private $clear;
+    /**
+     * @var bool
+     */
+    private $overWrite;
 
-    public function __construct($file_name, $max_children, $clear)
+    /**
+     * @param string $file_name Full path to database file
+     * @param bool $over_write Clear database file before writing
+     */
+    public function __construct($file_name, $over_write = false)
     {
         $this->fileName = $file_name;
-        $this->maxChildren = $max_children;
-        $this->clear = $clear;
+        $this->overWrite = $over_write;
         $this->setFileHandler();
         $this->setRootNode();
     }
 
-    /**
-     * @throws \Exception
-     */
-    private function setFileHandler()
+    public function __destruct()
     {
-        $mode = $this->clear == true ? 'w+' : 'r+';
-        if (!($this->fileHandler = fopen($this->fileName, $mode))) {
-            throw new \Exception('Unable to open file');
-        }
-    }
-
-    private function setRootNode()
-    {
-        if (fseek($this->fileHandler, -self::NODE_SIZE_BYTES, SEEK_END) !== -1) {
-            echo 'Found root node...';
-            $contents = fread($this->fileHandler, self::NODE_SIZE_BYTES);
-            $this->rootNode = unserialize($contents);
-        } else {
-            echo 'Creating new root node...';
-            $this->rootNode = new Node();
-
-            $this->writeRootNode($this->rootNode);
-
+        if ($this->fileHandler) {
+            fclose($this->fileHandler);
         }
     }
 
     /**
-     * @return mixed
+     * @return Node
      */
     public function getRootNode()
     {
@@ -66,21 +60,26 @@ class FileStore implements StoreInterface
     /**
      * @param Node $node
      * @param int $index
-     * @return mixed
+     * @throws \RuntimeException
+     * @return Node
      */
     public function getChildNode(Node $node, $index)
     {
         $child_offset = $node->children[$index];
         fseek($this->fileHandler, $child_offset);
         $contents = fread($this->fileHandler, self::NODE_SIZE_BYTES);
-        return unserialize($contents);
+        $contents = unserialize($contents);
+        if (!$contents instanceof Node) {
+            throw new RuntimeException("Unserialized object must be instance of Node");
+        }
+        return $contents;
     }
 
     /**
      * @param Node $parent_node
      * @param int $index
      * @param Node $child_node
-     * @return mixed
+     * @return void
      */
     public function writeChildNode(Node $parent_node, $index, Node $child_node)
     {
@@ -94,6 +93,10 @@ class FileStore implements StoreInterface
         $this->writeNode($parent_node);
     }
 
+    /**
+     * @param Node $node
+     * @return void
+     */
     public function allocateNode(Node $node)
     {
         fseek($this->fileHandler, -self::NODE_SIZE_BYTES, SEEK_END);
@@ -103,23 +106,24 @@ class FileStore implements StoreInterface
         $this->writeRootNode($this->getRootNode());
     }
 
+    /**
+     * @param Node $node
+     * @throws \RuntimeException
+     * @return void
+     */
     public function writeNode(Node $node)
     {
-        if (count($node->keys) > $this->maxChildren) {
-            throw new \Exception('Node capacity exceeded, you must split.');
-        }
         if (is_int($node->offset)) {
             fseek($this->fileHandler, $node->offset);
             fwrite($this->fileHandler, $this->serialize($node), self::NODE_SIZE_BYTES);
         } else {
-            throw new \Exception('Requires offset');
+            throw new RuntimeException('Requires offset');
         }
     }
 
-
     /**
      * @param Node $node
-     * @return mixed
+     * @return void
      */
     public function writeRootNode(Node $node)
     {
@@ -130,34 +134,74 @@ class FileStore implements StoreInterface
         $this->rootNode = $node;
     }
 
-    private function serialize($object)
+    /**
+     * @param Node $node
+     * @param $min_key
+     * @param $max_key
+     * @throws \OutOfRangeException
+     * @return array
+     */
+    public function traverse(Node $node, $min_key, $max_key)
     {
-        $serialized = serialize($object) . ' ' . print_r($object, true);
-        return str_pad($serialized, self::NODE_SIZE_BYTES, '.');
-    }
+        if ($min_key > $max_key) {
+            throw new OutOfRangeException("Min can't be greater than max.");
+        }
 
-    public function traverse(Node $node, $min, $max)
-    {
         $vals = array();
 
         $has_children = sizeof($node->children) > 0;
 
         $key_count = sizeof($node->keys);
         for ($i = 0; $i < $key_count; $i++) {
-            $key = $node->keys[$i]->key;
-            if ($key >= $min) {
+            if ($node->keys[$i]->key >= $min_key) {
                 if ($has_children) {
-                    $vals = array_merge($vals, $this->traverse($this->getChildNode($node, $i), $min, $max));
+                    $vals = array_merge($vals, $this->traverse($this->getChildNode($node, $i), $min_key, $max_key));
                 }
-                if ($key >= $min && $key <= $max) {
+                if ($node->keys[$i]->key <= $max_key) {
                     $vals[] = $node->keys[$i]->key;
                 }
             }
         }
-        if ($has_children && $node->keys[$i - 1]->key < $max) {
-            $vals = array_merge($vals, $this->traverse($this->getChildNode($node, $i), $min, $max));
+
+        if ($has_children && $node->keys[$i - 1]->key < $max_key) {
+            $vals = array_merge($vals, $this->traverse($this->getChildNode($node, $i), $min_key, $max_key));
         }
 
         return $vals;
+    }
+
+    /**
+     * @param $object
+     * @return string
+     */
+    private function serialize($object)
+    {
+        return str_pad(serialize($object), self::NODE_SIZE_BYTES, '.');
+    }
+
+
+    /**
+     * @throws \Exception
+     */
+    private function setFileHandler()
+    {
+        $mode = $this->overWrite == true ? 'w+' : 'r+';
+        if (!($this->fileHandler = fopen($this->fileName, $mode))) {
+            throw new RuntimeException('Unable to open file');
+        }
+    }
+
+    /**
+     * @return void
+     */
+    private function setRootNode()
+    {
+        if (fseek($this->fileHandler, -self::NODE_SIZE_BYTES, SEEK_END) !== -1) {
+            $contents = fread($this->fileHandler, self::NODE_SIZE_BYTES);
+            $this->rootNode = unserialize($contents);
+        } else {
+            $this->rootNode = new Node();
+            $this->writeRootNode($this->rootNode);
+        }
     }
 }

@@ -5,18 +5,22 @@ require_once 'vendor/autoload.php';
 
 use \Kaminski\BTree\FileStore;
 
-$store = new FileStore('/tmp/db.txt', 3, true);
+$store = new FileStore('/tmp/db.txt', true);
 //$store = new \Kaminski\BTree\ArrayStore();
 $tree = new \Kaminski\BTree\BTree($store, 3);
 
 $count = 1000;
 
-for($i = $count; $i >= 1; $i--) {
-//for($i = 1; $i <= $count; $i++) {
+//for($i = $count; $i >= 1; $i--) {
+for($i = 1; $i <= $count; $i++) {
     $tree->put($i, "val_!".$i);
 }
 
-die(print_r($tree->getKeyRange(1, 1000)));
+$store = new FileStore('/tmp/db.txt');
+//$store = new \Kaminski\BTree\ArrayStore();
+$tree = new \Kaminski\BTree\BTree($store, 3);
+
+die(print_r($tree->getKeyRange(70, 91)));
 //for($i = 1; $i <= $count; $i++) {
 //    echo "\n".$tree->find($i)->value."\n";
 //}
