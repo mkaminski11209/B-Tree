@@ -79,6 +79,10 @@ class BTree
     {
         $key_count = count($node->keys);
 
+        if($key_count === 0) {
+            return null;
+        }
+
         for ($i = 0; $i <= $key_count; $i++) {
 
             if ($i === $key_count || $key < $node->keys[$i]->key) {
