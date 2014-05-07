@@ -109,5 +109,11 @@ class BTreeTestFileStore extends PHPUnit_Framework_TestCase
             $this->assertEquals($i, $this->tree->find($i)->key);
         }
     }
+
+    public function testUpdateValue() {
+        $this->tree->put(10, 'old_val_10');
+        $this->tree->put(10, 'new_val_10');
+        $this->assertEquals('new_val_10', $this->tree->find(10)->value);
+    }
 }
  

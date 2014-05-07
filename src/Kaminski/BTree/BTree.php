@@ -106,7 +106,6 @@ class BTree
     {
         $new_root = new Node();
         $new_root->keys = array_splice($node->keys, 2);
-        //TODO... write out notes after splicing them?
         $new_root->children = count($node->children) > 2 ? array_splice($node->children, 2) : array();
 
         return $new_root;
@@ -120,7 +119,16 @@ class BTree
      */
     private function insert(Node $node, $key, $value)
     {
-        if (count($node->children) === 0) {
+        //Update node if key already exists
+        foreach($node->keys as $index => $entry) {
+            if($entry->key === $key) {
+                $node->keys[$index]->value = $value;
+                $this->store->writeNode($node);
+                return null;
+            }
+        }
+
+        if (count($node->children) === 0) { //Insert into leaf node
 
             $count = count($node->keys);
 
@@ -132,7 +140,7 @@ class BTree
 
             $this->insertAt($node->keys, $i, new Entry($key, $value));
 
-        } else {
+        } else { //Search non-leaf node
 
             $key_count = count($node->keys);
 
@@ -162,7 +170,6 @@ class BTree
                 if ($result !== null) {
                     $this->store->allocateNode($result);
                     $this->store->writeChildNode($node, $i + 1, $result);
-                    //TODO... write out notes after splicing them?
                     $node->keys = array_merge($node->keys, array_splice($child->keys, 1, 1));
                     $this->store->writeNode($child);
                 }
