@@ -47,7 +47,7 @@ interface StoreInterface
      * @param Node $node
      * @param $min_key
      * @param $max_key
-     * @return array
+     * @return Entry[]
      */
     public function traverse(Node $node, $min_key, $max_key);
 

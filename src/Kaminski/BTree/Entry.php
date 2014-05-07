@@ -19,4 +19,11 @@ class Entry
      * @var string
      */
     public $value;
+
+    /**
+     * @return string
+     */
+    public function __toString() {
+        return "Key: ".$this->key." Value: ".$this->value;
+    }
 }

@@ -195,7 +195,7 @@ class BTree
     /**
      * @param $from
      * @param $to
-     * @return Node[]
+     * @return Entry[]
      */
     public function getKeyRange($from, $to)
     {

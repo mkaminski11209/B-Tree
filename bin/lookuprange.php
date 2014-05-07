@@ -4,10 +4,10 @@
  * @since 5/4/2014
  */
 
-require_once __DIR__.'/../vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
-if(count($argv) != 4) {
-    echo "\nMissing arguments. Format: php ".__FILE__." [file] [lowkey] [hikey]\n\n";
+if (count($argv) != 4) {
+    echo "\nMissing arguments. Format: php " . __FILE__ . " [file] [lowkey] [hikey]\n\n";
     exit;
 }
 
@@ -21,15 +21,18 @@ try {
 
     $result = $btree->getKeyRange($low_key, $high_key);
 
-} catch(\Exception $e) {
-    echo "Error occurred: ".$e->getMessage();
+    if (count($result) > 0) {
+        echo "\nResults for " . $filename . " from key " . $low_key . " to " . $high_key . "\n\n";
+        foreach ($result as $entry) {
+            echo $entry . "\n";
+        }
+    } else {
+        echo "No result(s) found.";
+    }
+
+} catch (\Exception $e) {
+    echo "Error occurred: " . $e->getMessage();
     exit;
 }
 
-echo "Searching ".$filename." from key ".$low_key." to ".$high_key."\n\n";
-
-if(count($result) > 0) {
-    echo "Keys found: ".implode(', ', $result)."\n";
-} else {
-    echo "No result(s) found.\n";
-}
+echo "\n\n";

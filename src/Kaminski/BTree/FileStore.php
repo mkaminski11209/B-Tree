@@ -151,7 +151,7 @@ class FileStore implements StoreInterface
      * @param $min_key
      * @param $max_key
      * @throws \OutOfRangeException
-     * @return array
+     * @return Entry[]
      */
     public function traverse(Node $node, $min_key, $max_key)
     {
@@ -170,7 +170,7 @@ class FileStore implements StoreInterface
                     $vals = array_merge($vals, $this->traverse($this->getChildNode($node, $i), $min_key, $max_key));
                 }
                 if ($node->keys[$i]->key <= $max_key) {
-                    $vals[] = $node->keys[$i]->key;
+                    $vals[] = $node->keys[$i];
                 }
             }
         }

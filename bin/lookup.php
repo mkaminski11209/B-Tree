@@ -4,10 +4,10 @@
  * @since 5/4/2014
  */
 
-require_once __DIR__.'/../vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
-if(count($argv) != 3) {
-    echo "\nMissing arguments. Format: php ".__FILE__." [file] [key]\n\n";
+if (count($argv) != 3) {
+    echo "\nMissing arguments. Format: php " . __FILE__ . " [file] [key]\n\n";
     exit;
 }
 
@@ -20,14 +20,15 @@ try {
 
     $result = $btree->find($key);
 
-    if($result !== null) {
-        echo "Entry found found for `".$key."`: ".$result->value."\n";
+    if ($result !== null) {
+        echo "Entry found found for `" . $key . "`: " . $result->value . "\n";
     } else {
-        echo "No result found for ".$key."\n";
+        echo "No result found for " . $key . "\n";
     }
 
-} catch(\Exception $e) {
-    echo "Error occurred: ".$e->getMessage();
+} catch (\Exception $e) {
+    echo "Error occurred: " . $e->getMessage();
     exit;
 }
 
+echo "\n\n";
