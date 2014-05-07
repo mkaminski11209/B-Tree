@@ -135,4 +135,29 @@ class FileStore implements StoreInterface
         $serialized = serialize($object) . ' ' . print_r($object, true);
         return str_pad($serialized, self::NODE_SIZE_BYTES, '.');
     }
+
+    public function traverse(Node $node, $min, $max)
+    {
+        $vals = array();
+
+        $has_children = sizeof($node->children) > 0;
+
+        $key_count = sizeof($node->keys);
+        for ($i = 0; $i < $key_count; $i++) {
+            $key = $node->keys[$i]->key;
+            if ($key >= $min) {
+                if ($has_children) {
+                    $vals = array_merge($vals, $this->traverse($this->getChildNode($node, $i), $min, $max));
+                }
+                if ($key >= $min && $key <= $max) {
+                    $vals[] = $node->keys[$i]->key;
+                }
+            }
+        }
+        if ($has_children && $node->keys[$i - 1]->key < $max) {
+            $vals = array_merge($vals, $this->traverse($this->getChildNode($node, $i), $min, $max));
+        }
+
+        return $vals;
+    }
 }
