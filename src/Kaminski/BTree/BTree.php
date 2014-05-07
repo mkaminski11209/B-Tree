@@ -192,6 +192,11 @@ class BTree
         $array[$j] = $value;
     }
 
+    /**
+     * @param $from
+     * @param $to
+     * @return Node[]
+     */
     public function getKeyRange($from, $to)
     {
         return $this->store->traverse($this->store->getRootNode(), $from, $to);
