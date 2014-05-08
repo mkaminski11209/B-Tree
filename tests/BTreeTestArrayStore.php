@@ -4,7 +4,7 @@
 //
 //use Kaminski\BTree\BTree;
 //
-//class BTreeTest extends PHPUnit_Framework_TestCase
+//class BTreeTestArrayStore extends PHPUnit_Framework_TestCase
 //{
 //
 //    /**

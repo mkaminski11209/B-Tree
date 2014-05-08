@@ -1,11 +1,20 @@
 <?php
-
+/**
+ * 3-Way B-Tree
+ *
+ * To do:
+ * - Generalize for n-way trees
+ * - Add delete and compact functions
+ *
+ * @author Mike Kaminski <michael.w.kaminski@gmail.com>
+ * @since 5/7/2014
+ */
 namespace Kaminski\BTree;
+
+use \OutOfRangeException;
 
 class BTree
 {
-    const DEFAULT_ORDER = 3;
-
     /**
      * @var Node
      */
@@ -68,6 +77,16 @@ class BTree
     public function find($key)
     {
         return $this->search($this->rootNode, $key);
+    }
+
+    /**
+     * @param $from
+     * @param $to
+     * @return Entry[]
+     */
+    public function getKeyRange($from, $to)
+    {
+        return $this->traverse($this->store->getRootNode(), $from, $to);
     }
 
     /**
@@ -207,12 +226,46 @@ class BTree
     }
 
     /**
-     * @param $from
-     * @param $to
+     * @param Node $node
+     * @param $min_key
+     * @param $max_key
+     * @throws \OutOfRangeException
      * @return Entry[]
      */
-    public function getKeyRange($from, $to)
+    private function traverse(Node $node, $min_key, $max_key)
     {
-        return $this->store->traverse($this->store->getRootNode(), $from, $to);
+        if ($min_key > $max_key) {
+            throw new OutOfRangeException("Min can't be greater than max.");
+        }
+
+        $entries_found = array();
+
+        $has_children = sizeof($node->children) > 0;
+
+        $key_count = sizeof($node->keys);
+        for ($i = 0; $i < $key_count; $i++) {
+            if ($node->keys[$i]->key >= $min_key) {
+                if ($has_children) {
+                    $child_node = $this->store->getChildNode($node, $i);
+                    $entries_found = array_merge(
+                        $entries_found,
+                        $this->traverse($child_node, $min_key, $max_key)
+                    );
+                }
+                if ($node->keys[$i]->key <= $max_key) {
+                    $entries_found[] = $node->keys[$i];
+                }
+            }
+        }
+
+        if ($has_children && $node->keys[$i - 1]->key < $max_key) {
+            $child_node = $this->store->getChildNode($node, $i);
+            $entries_found = array_merge(
+                $entries_found,
+                $this->traverse($child_node, $min_key, $max_key)
+            );
+        }
+
+        return $entries_found;
     }
 }

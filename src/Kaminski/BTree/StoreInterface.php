@@ -1,10 +1,14 @@
 <?php
-
+/**
+ * Abstraction for B-Tree store for the B-Tree class
+ *
+ * @author Mike Kaminski <michael.w.kaminski@gmail.com>
+ * @since 5/6/2014
+ */
 namespace Kaminski\BTree;
 
 interface StoreInterface
 {
-
     /**
      * @return mixed
      */
@@ -42,14 +46,6 @@ interface StoreInterface
      * @return void
      */
     public function writeRootNode(Node $node);
-
-    /**
-     * @param Node $node
-     * @param $min_key
-     * @param $max_key
-     * @return Entry[]
-     */
-    public function traverse(Node $node, $min_key, $max_key);
 
     /**
      * @return int

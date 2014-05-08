@@ -124,7 +124,8 @@ class BTreeTestFileStore extends PHPUnit_Framework_TestCase
         $this->assertNull($this->tree->find(0));
     }
 
-    public function testEmptyResultWithNonEmptyTree() {
+    public function testEmptyResultWithNonEmptyTree()
+    {
         $this->tree->put(1, "someval");
         $this->assertNull($this->tree->find(10));
     }

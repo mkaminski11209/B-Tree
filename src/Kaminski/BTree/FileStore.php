@@ -4,12 +4,15 @@
  *
  * Supports 4KB 3, 5, 7...-ary nodes
  *
+ * To do:
+ * - Add file locking
+ * - Handle fseek and fwrite errors
+ *
  * @author Mike Kaminski <michael.w.kaminski@gmail.com>
  * @since 5/6/2014
  */
 namespace Kaminski\BTree;
 
-use \OutOfRangeException;
 use \RuntimeException;
 
 class FileStore implements StoreInterface
@@ -150,42 +153,6 @@ class FileStore implements StoreInterface
     }
 
     /**
-     * @param Node $node
-     * @param $min_key
-     * @param $max_key
-     * @throws \OutOfRangeException
-     * @return Entry[]
-     */
-    public function traverse(Node $node, $min_key, $max_key)
-    {
-        if ($min_key > $max_key) {
-            throw new OutOfRangeException("Min can't be greater than max.");
-        }
-
-        $vals = array();
-
-        $has_children = sizeof($node->children) > 0;
-
-        $key_count = sizeof($node->keys);
-        for ($i = 0; $i < $key_count; $i++) {
-            if ($node->keys[$i]->key >= $min_key) {
-                if ($has_children) {
-                    $vals = array_merge($vals, $this->traverse($this->getChildNode($node, $i), $min_key, $max_key));
-                }
-                if ($node->keys[$i]->key <= $max_key) {
-                    $vals[] = $node->keys[$i];
-                }
-            }
-        }
-
-        if ($has_children && $node->keys[$i - 1]->key < $max_key) {
-            $vals = array_merge($vals, $this->traverse($this->getChildNode($node, $i), $min_key, $max_key));
-        }
-
-        return $vals;
-    }
-
-    /**
      * @return int
      */
     public function getSeekCount() {
@@ -226,8 +193,8 @@ class FileStore implements StoreInterface
     private function setFileHandler()
     {
         //
-        // Open for reading and writing; place the file pointer at the end of
-        // the file. If the file does not exist, attempt to create it.
+        // Open for reading and writing; place the file pointer at the
+        // beginning of the file.
         //
         if (!($this->fileHandler = fopen($this->fileName, 'r+'))) {
             throw new RuntimeException('Unable to open file '.$this->fileName);
