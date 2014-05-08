@@ -79,25 +79,30 @@ class BTree
     {
         $key_count = count($node->keys);
 
-        if($key_count === 0) {
+        if ($key_count === 0) {
             return null;
         }
 
-        for ($i = 0; $i <= $key_count; $i++) {
-
-            if ($i === $key_count || $key < $node->keys[$i]->key) {
-
-                $result = $this->search($this->store->getChildNode($node, $i), $key);
-
-                if ($result !== null) {
-                    return $result;
-                }
-
-            } else if ($key === $node->keys[$i]->key) {
+        for ($i = 0; $i < $key_count; $i++) {
+            if ($key === $node->keys[$i]->key) {
                 return $node->keys[$i];
             }
         }
 
+        if (count($node->children) > 0) {
+            for ($i = 0; $i <= $key_count; $i++) {
+
+                if (($i === $key_count && $key > $node->keys[$i-1]->key) || $key < $node->keys[$i]->key) {
+
+                    $result = $this->search($this->store->getChildNode($node, $i), $key);
+
+                    if ($result !== null) {
+                        return $result;
+                    }
+
+                }
+            }
+        }
         return null;
     }
 
@@ -124,8 +129,8 @@ class BTree
     private function insert(Node $node, $key, $value)
     {
         //Update node if key already exists
-        foreach($node->keys as $index => $entry) {
-            if($entry->key === $key) {
+        foreach ($node->keys as $index => $entry) {
+            if ($entry->key === $key) {
                 $node->keys[$index]->value = $value;
                 $this->store->writeNode($node);
                 return null;

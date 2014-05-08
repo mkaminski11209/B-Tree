@@ -77,6 +77,9 @@ class FileStore implements StoreInterface
      */
     public function getChildNode(Node $node, $index)
     {
+        if(!count($node->children) || !isset($node->children[$index])) {
+            return null;
+        }
         $child_offset = $node->children[$index];
         $this->fseek($this->fileHandler, $child_offset);
         $contents = fread($this->fileHandler, self::NODE_SIZE_BYTES);
