@@ -91,15 +91,13 @@ class BTree
 
         if (count($node->children) > 0) {
             for ($i = 0; $i <= $key_count; $i++) {
-
-                if (($i === $key_count && $key > $node->keys[$i-1]->key) || $key < $node->keys[$i]->key) {
+                if (($i === $key_count) || $key < $node->keys[$i]->key) {
 
                     $result = $this->search($this->store->getChildNode($node, $i), $key);
 
                     if ($result !== null) {
                         return $result;
                     }
-
                 }
             }
         }

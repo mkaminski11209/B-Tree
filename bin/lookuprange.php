@@ -29,8 +29,10 @@ try {
         echo "No result(s) found.";
     }
 
+    echo "\n".$store->getSeekCount()." total calls to fseek";
+
 } catch (\Exception $e) {
-    die("Error occurred: " . $e->getMessage());
+    die("Error occurred: " . $e->getMessage()."\n");
 }
 
 echo "\n\n";

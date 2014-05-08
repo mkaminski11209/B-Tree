@@ -17,7 +17,7 @@ $store = new FileStore($file, 3);
 //$store = new \Kaminski\BTree\ArrayStore();
 $tree = new \Kaminski\BTree\BTree($store);
 
-$count = 1;
+$count = 10000;
 
 //for($i = $count; $i >= 1; $i--) {
 for($i = 1; $i <= $count; $i++) {
@@ -28,9 +28,9 @@ for($i = 1; $i <= $count; $i++) {
 ////$store = new \Kaminski\BTree\ArrayStore();
 //$tree = new \Kaminski\BTree\BTree($store);
 
-$store->resetSeekCount();
+//$store->resetSeekCount();
 
-print($tree->find(2000));
+print($tree->find(6000)."\n");
 
 //echo 'Seeks: '.$store->getSeekCount();
 //for($i = 1; $i <= $count; $i++) {
